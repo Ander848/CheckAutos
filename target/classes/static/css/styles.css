@@ -37,9 +37,6 @@ body {
 
 h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
 
-/* ══════════════════════════════
-   AUTH PAGE (Login + Registro)
-══════════════════════════════ */
 #authPage {
   min-height: 100vh;
   background: #1a1d23;
@@ -104,7 +101,6 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
 
 .auth-feature i { color: #4ade80; font-size: .9rem; }
 
-/* Tarjeta auth */
 .auth-card {
   background: #22272e;
   border: 1px solid rgba(255,255,255,0.08);
@@ -115,7 +111,6 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
   min-width: 310px;
 }
 
-/* Tabs login / crear cuenta */
 .auth-tabs {
   display: flex;
   background: #2d333b;
@@ -147,7 +142,6 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
 
 .auth-tab:not(.active):hover { color: #fff; background: rgba(255,255,255,.06); }
 
-/* Panel de formulario */
 .auth-panel { display: none; }
 .auth-panel.active { display: block; }
 
@@ -215,16 +209,11 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
 .auth-msg.error   { color:#f87171; background:rgba(239,68,68,.1);  }
 .auth-msg.success { color:#4ade80; background:rgba(74,222,128,.1); }
 
-/* Form row */
 .form-row-2 { display:flex; gap:.6rem; }
 .form-row-2 > * { flex:1; }
 
-/* ══════════════════════════════
-   APP SHELL
-══════════════════════════════ */
 #appShell { display:none; min-height:100vh; }
 
-/* ── Sidebar ── */
 #sidebar {
   width: var(--sidebar-icon-w);
   min-height: 100vh;
@@ -311,7 +300,6 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
 .sb-link-text { opacity:0; transition: opacity .18s ease .08s; }
 #sidebar:hover .sb-link-text { opacity:1; }
 
-/* Candado en links bloqueados */
 .sb-lock {
   font-size:.65rem;
   color: var(--text-dim);
@@ -345,7 +333,6 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
 .sb-user-name  { font-size:.82rem; font-weight:500; color:var(--text-primary); }
 .sb-user-arrow { font-size:.65rem; color:var(--text-dim); }
 
-/* ── Topbar ── */
 #topbar {
   height: var(--topbar-h);
   background: var(--bg-sidebar);
@@ -379,7 +366,6 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
 .topbar-uname  { font-size:.8rem; color:var(--text-secondary); }
 .topbar-arrow  { font-size:.65rem; color:var(--text-dim); }
 
-/* ── Main ── */
 #mainContent {
   margin-left: var(--sidebar-icon-w);
   padding: 1.75rem;
@@ -387,9 +373,6 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
   background: var(--bg-dark);
 }
 
-/* ══════════════════════════════
-   COMPONENTES
-══════════════════════════════ */
 .stat-card {
   background:var(--bg-card); border:1px solid var(--border); border-radius:12px;
   padding:1.1rem 1.25rem; display:flex; align-items:center; justify-content:space-between;
@@ -530,7 +513,6 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
 .activity-text { font-size:.875rem; font-weight:500; color:var(--text-primary); margin-bottom:.1rem; }
 .activity-time { font-size:.75rem; color:var(--text-secondary); }
 
-/* Toast notificación */
 .toast-msg {
   position:fixed; bottom:1.5rem; right:1.5rem;
   background:#22272e; border:1px solid rgba(74,222,128,.3);
@@ -544,7 +526,6 @@ h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
 }
 .toast-msg.show { transform:translateY(0); opacity:1; }
 
-/* Vista bloqueada */
 .view-locked-msg {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   min-height:50vh; text-align:center; gap:1rem;

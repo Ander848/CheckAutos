@@ -10,13 +10,10 @@
 </head>
 <body>
 
-<!-- ════════════════════════════════════════
-     AUTH PAGE
-════════════════════════════════════════ -->
 <div id="authPage" style="display:flex;">
   <div class="auth-wrap">
 
-    <!-- Hero -->
+
     <div class="auth-hero">
       <div class="brand-tag">
         <i class="bi bi-shield-check-fill"></i> CheckAutos
@@ -43,21 +40,21 @@
       </div>
     </div>
 
-    <!-- Tarjeta auth -->
+
     <div class="auth-card">
 
-      <!-- Tabs -->
+
       <div class="auth-tabs">
         <button class="auth-tab active" id="tab-login"   onclick="switchTab('login')">Iniciar sesión</button>
         <button class="auth-tab"        id="tab-registro" onclick="switchTab('registro')">Crear cuenta</button>
       </div>
 
-      <!-- Mensaje global -->
+
       <div id="authMsg" class="auth-msg"></div>
 
-      <!-- Panel Login -->
+
       <div class="auth-panel active" id="panel-login">
-        <input type="text"     id="loginUser" class="form-control" placeholder="Usuario">
+        <input type="email"    id="loginUser" class="form-control" placeholder="Correo electrónico">
         <input type="password" id="loginPass" class="form-control" placeholder="Contraseña">
         <div class="auth-check-row">
           <input type="checkbox" id="rememberMe">
@@ -74,12 +71,10 @@
         </p>
       </div>
 
-      <!-- Panel Crear cuenta -->
+
       <div class="auth-panel" id="panel-registro">
-        <div class="form-row-2">
-          <input type="text" id="regNombre" class="form-control" placeholder="Nombre completo">
-          <input type="text" id="regUser"   class="form-control" placeholder="Usuario">
-        </div>
+        <input type="text"  id="regNombre" class="form-control" placeholder="Nombre completo" style="margin-bottom:.75rem;">
+        <input type="email" id="regUser"   class="form-control" placeholder="Correo electrónico">
         <input type="password" id="regPass"  class="form-control" placeholder="Contraseña">
         <input type="password" id="regPass2" class="form-control" placeholder="Confirmar contraseña">
         <button class="btn-auth" onclick="crearCuenta()">Crear cuenta</button>
@@ -97,13 +92,9 @@
   </div>
 </div>
 
-
-<!-- ════════════════════════════════════════
-     APP SHELL
-════════════════════════════════════════ -->
 <div id="appShell">
 
-  <!-- SIDEBAR -->
+
   <nav id="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-icon">CA</div>
@@ -158,7 +149,7 @@
     </div>
   </nav>
 
-  <!-- TOPBAR -->
+
   <div id="topbar">
     <span class="topbar-title" id="topbarTitle">Dashboard</span>
     <div class="topbar-right">
@@ -173,14 +164,13 @@
     </div>
   </div>
 
-  <!-- CONTENIDO -->
+
   <div id="mainContent">
 
 
-    <!-- ═══════════ DASHBOARD ═══════════ -->
     <div class="view" id="view-dashboard">
 
-      <!-- Stats dinámicos -->
+
       <div class="row g-3 mb-4">
         <div class="col-6 col-xl-3">
           <div class="stat-card">
@@ -229,7 +219,7 @@
       </div>
 
       <div class="row g-3">
-        <!-- Tabla dinámica -->
+
         <div class="col-12 col-xl-8">
           <div class="card-dark">
             <div class="cd-header">
@@ -258,7 +248,7 @@
           </div>
         </div>
 
-        <!-- Actividad -->
+
         <div class="col-12 col-xl-4">
           <div class="card-dark h-100">
             <div class="cd-header">Comenzar</div>
@@ -296,10 +286,9 @@
         </div>
       </div>
 
-    </div><!-- /dashboard -->
+    </div>
 
 
-    <!-- ═══════════ AUTOS REGISTRADOS ═══════════ -->
     <div class="view" id="view-autos">
 
       <div class="d-flex align-items-center justify-content-between mb-4">
@@ -314,7 +303,7 @@
         </button>
       </div>
 
-      <!-- Filtros -->
+
       <div class="card-dark mb-3">
         <div class="cd-body">
           <div class="row g-2 align-items-end">
@@ -384,10 +373,9 @@
         </div>
       </div>
 
-    </div><!-- /autos -->
+    </div>
 
 
-    <!-- ═══════════ REGISTRAR AUTO ═══════════ -->
     <div class="view" id="view-registro">
 
       <div class="mb-4">
@@ -405,7 +393,7 @@
       </div>
 
       <div class="row g-3">
-        <!-- Formulario -->
+
         <div class="col-12 col-lg-8">
 
           <div class="card-dark mb-3">
@@ -416,26 +404,22 @@
               <div class="row g-3">
                 <div class="col-sm-6">
                   <label class="form-label">Marca *</label>
-                  <select class="form-select" id="inp_marca">
+                  <select class="form-select" id="inp_marca" onchange="actualizarModelos()">
                     <option value="">Seleccionar…</option>
-                    <option>Toyota</option><option>Mazda</option><option>Kia</option>
-                    <option>Renault</option><option>Chevrolet</option><option>Hyundai</option>
-                    <option>Ford</option><option>Volkswagen</option><option>Nissan</option>
-                    <option>Honda</option><option>Suzuki</option>
                   </select>
                 </div>
                 <div class="col-sm-6">
                   <label class="form-label">Modelo *</label>
-                  <input type="text" class="form-control" id="inp_modelo" placeholder="Ej: Corolla, CX-30">
+                  <select class="form-select" id="inp_modelo">
+                    <option value="">Selecciona una marca primero…</option>
+                  </select>
                 </div>
                 <div class="col-sm-4">
                   <label class="form-label">Año *</label>
-                  <select class="form-select" id="inp_anio">
-                    <option value="">—</option>
-                    <option>2025</option><option>2024</option><option>2023</option>
-                    <option>2022</option><option>2021</option><option>2020</option>
-                    <option>2019</option><option>2018</option><option>2017</option>
-                  </select>
+                  <input type="text" class="form-control" id="inp_año"
+                         placeholder="Ej: 2022" maxlength="4"
+                         list="listaAnios" autocomplete="off">
+                  <datalist id="listaAnios"></datalist>
                 </div>
                 <div class="col-sm-4">
                   <label class="form-label">Color</label>
@@ -470,9 +454,11 @@
                 </div>
                 <div class="col-sm-6">
                   <label class="form-label">N.º propietarios</label>
-                  <select class="form-select">
-                    <option>1 — Primer dueño</option>
-                    <option>2</option><option>3 o más</option>
+                  <select class="form-select" id="inp_nPropietarios">
+                    <option value="">Seleccionar…</option>
+                    <option value="1">1 — Primer dueño</option>
+                    <option value="2">2</option>
+                    <option value="3">3 o más</option>
                   </select>
                 </div>
               </div>
@@ -525,7 +511,7 @@
 
         </div>
 
-        <!-- Resumen dinámico -->
+
         <div class="col-12 col-lg-4">
           <div class="card-dark mb-3">
             <div class="cd-header">Resumen del registro</div>
@@ -560,10 +546,9 @@
         </div>
       </div>
 
-    </div><!-- /registro -->
+    </div>
 
 
-    <!-- ═══════════ REVISIÓN TÉCNICA ═══════════ -->
     <div class="view" id="view-revision">
 
       <div class="mb-4">
@@ -660,7 +645,7 @@
 
               <div class="mt-3">
                 <label class="form-label">Observaciones técnicas</label>
-                <textarea class="form-control" rows="3" placeholder="Notas adicionales…"></textarea>
+                <textarea class="form-control" rows="3" id="obsRevision" placeholder="Notas adicionales…"></textarea>
               </div>
             </div>
           </div>
@@ -692,10 +677,9 @@
         </div>
       </div>
 
-    </div><!-- /revision -->
+    </div>
 
 
-    <!-- ═══════════ REVISIÓN MECÁNICA ═══════════ -->
     <div class="view" id="view-mecanica">
 
       <div class="mb-4">
@@ -824,7 +808,7 @@
 
               <div class="mt-3">
                 <label class="form-label">Observaciones del técnico mecánico</label>
-                <textarea class="form-control" rows="3" placeholder="Notas del mecánico…"></textarea>
+                <textarea class="form-control" rows="3" id="obsMecanica" placeholder="Notas del mecánico…"></textarea>
               </div>
             </div>
           </div>
@@ -873,10 +857,9 @@
         </div>
       </div>
 
-    </div><!-- /mecanica -->
+    </div>
 
 
-    <!-- ═══════════ VALUACIÓN ═══════════ -->
     <div class="view" id="view-valuacion">
 
       <div class="mb-4">
@@ -895,7 +878,7 @@
 
       <div class="row g-3">
 
-        <!-- Precio -->
+
         <div class="col-12 col-lg-5">
           <div class="precio-card mb-3">
             <div class="pc-label">Precio de venta sugerido</div>
@@ -921,7 +904,7 @@
             </div>
           </div>
 
-          <!-- Tabla de descuentos -->
+
           <div class="card-dark mb-3">
             <div class="cd-header">
               <span><i class="bi bi-table me-1" style="color:var(--accent);"></i>Tabla de descuentos</span>
@@ -945,7 +928,7 @@
             </div>
           </div>
 
-          <!-- Ajuste manual -->
+
           <div class="card-dark">
             <div class="cd-header">Ajuste manual de precio</div>
             <div class="cd-body">
@@ -956,13 +939,13 @@
                        id="inp_precioFinal" oninput="onPrecioManualChange()">
               </div>
               <label class="form-label">Justificación (opcional)</label>
-              <textarea class="form-control" rows="2"
+              <textarea class="form-control" rows="2" id="justPrecio"
                         placeholder="Ej: ajuste por demanda del mercado…"></textarea>
             </div>
           </div>
         </div>
 
-        <!-- Resumen -->
+
         <div class="col-12 col-lg-7">
           <div class="card-dark mb-3">
             <div class="cd-header">Resumen de la evaluación</div>
@@ -1022,7 +1005,7 @@
             </div>
           </div>
 
-          <!-- Confirmar -->
+
           <button class="btn-primary-dark w-100 justify-content-center"
                   style="padding:.65rem;"
                   onclick="registrarAutoFinal()">
@@ -1032,21 +1015,19 @@
         </div>
       </div>
 
-    </div><!-- /valuacion -->
+    </div>
 
-  </div><!-- /mainContent -->
-</div><!-- /appShell -->
+  </div>
+</div>
 
-<!-- Toast -->
 <div class="toast-msg" id="appToast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/app.js"></script>
 
-<!-- Sincronizar tabla de autos registrados -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Observar cambios en App.autos para sincronizar tabla /autos
+
   const origRegistrar = registrarAutoFinal;
   window.registrarAutoFinal = function() {
     origRegistrar();
@@ -1076,7 +1057,7 @@ function sincronizarTablaAutos() {
       <td><strong>${a.marca} ${a.modelo}</strong><br>
           <small style="color:var(--text-secondary);">${a.color || ''}</small></td>
       <td>${a.placa}</td>
-      <td>${a.anio || '—'}</td>
+      <td>${a.año || '—'}</td>
       <td>${km}</td>
       <td><strong>${pre}</strong></td>
       <td><span class="${bc}">${a.estado}</span></td>
