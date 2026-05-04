@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
+@org.springframework.context.annotation.Profile("mongo")
 public interface PropietarioRepository extends MongoRepository<Propietario, String> {
 
 

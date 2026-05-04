@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+@org.springframework.context.annotation.Profile("mongo")
 public interface CarRepository extends MongoRepository<Car, String> {
 
 

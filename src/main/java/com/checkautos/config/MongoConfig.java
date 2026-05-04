@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 
 @Configuration
+@org.springframework.context.annotation.Profile("mongo")
 public class MongoConfig {
 
     @Bean
