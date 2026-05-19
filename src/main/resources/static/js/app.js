@@ -1,5 +1,5 @@
 const App = {
-  user:    null,
+  user:    null,  // { nombre, user, initials, rol }
   _token:  localStorage.getItem('ca_token') || null,
   maxPaso: 0,
   autos:   [],
@@ -15,10 +15,18 @@ const App = {
   },
 };
 
+
+// ── Roles ────────────────────────────────────────────────────
+function esAdmin() {
+  return App.user && App.user.rol === 'ADMIN';
+}
+
 const PASO_VISTA = {
   dashboard:1, autos:1, registro:1,
   revision:2, mecanica:3, valuacion:4,
+  analitica:1,
 };
+const PASO_SOLO_ADMIN = ['registro','revision','mecanica','valuacion'];
 
 async function api(method, path, body) {
   const opts = {
@@ -74,7 +82,7 @@ async function login() {
 
     App._token = data.token;
     localStorage.setItem('ca_token', data.token);
-    iniciarSesion(data.usuario.nombre, data.usuario.email);
+    iniciarSesion(data.usuario.nombre, data.usuario.email, data.usuario.rol);
 
   } catch (e) {
     mostrarMsgAuth('No se pudo conectar al servidor.', 'error');
@@ -123,8 +131,8 @@ function mostrarMsgAuth(msg, tipo) {
   el.style.display = 'block';
 }
 
-function iniciarSesion(nombre, user) {
-  App.user    = { nombre, user, initials: nombre.slice(0, 2).toUpperCase() };
+function iniciarSesion(nombre, user, rol) {
+  App.user    = { nombre, user, initials: nombre.slice(0, 2).toUpperCase(), rol: rol || 'USUARIO' };
   App.maxPaso = 1;
   document.getElementById('authPage').style.display = 'none';
   document.getElementById('appShell').style.display = 'block';
@@ -133,7 +141,43 @@ function iniciarSesion(nombre, user) {
   setTexto('topbarAvatarTxt', App.user.initials);
   setTexto('topbarUserName',  App.user.nombre);
   actualizarLocks();
+  aplicarRestriccionesRol();
   showView('dashboard');
+}
+
+function aplicarRestriccionesRol() {
+  const admin = esAdmin();
+
+  // Sidebar — ocultar vistas de registro a usuarios
+  ['registro','revision','mecanica','valuacion'].forEach(v => {
+    const link = document.querySelector(`.sb-link[data-view="${v}"]`);
+    if (link) link.style.display = admin ? '' : 'none';
+  });
+
+  // Botón "Nuevo auto" en topbar
+  document.querySelectorAll('.btn-topbar-new, [onclick*="nuevo"], [onclick*="registro"]').forEach(b => {
+    if (b.textContent.includes('Nuevo') || b.textContent.includes('auto')) {
+      b.style.display = admin ? '' : 'none';
+    }
+  });
+
+  // Inyectar CSS para ocultar botones de acción en tablas si es USUARIO
+  let styleTag = document.getElementById('rol-style');
+  if (!styleTag) {
+    styleTag = document.createElement('style');
+    styleTag.id = 'rol-style';
+    document.head.appendChild(styleTag);
+  }
+
+  if (!admin) {
+    // Ocultar botones de editar, archivar en tablas
+    styleTag.textContent = `
+      .btn-accion-admin { display: none !important; }
+      .col-acciones-admin { display: none !important; }
+    `;
+  } else {
+    styleTag.textContent = '';
+  }
 }
 
 function logout() {
@@ -162,7 +206,7 @@ async function verificarSesionExistente() {
     const res = await api('GET', '/api/auth/me');
     if (!res || !res.ok) { _limpiarSesion(); return; }
     const data = await res.json();
-    iniciarSesion(data.nombre, data.username);
+    iniciarSesion(data.nombre, data.username, data.rol);
   } catch (e) {
     _limpiarSesion();
   }
@@ -194,8 +238,10 @@ function abrirPanelPerfil() {
           <div>
             <div style="font-weight:700;font-size:1.05rem;">${u.nombre}</div>
             <div style="color:var(--text-secondary);font-size:.82rem;">@${u.user}</div>
-            <span style="background:rgba(74,222,128,.15);color:#4ade80;border-radius:6px;
-                         padding:.1rem .55rem;font-size:.72rem;font-weight:600;">Activo</span>
+            <div style="display:flex;gap:.4rem;margin-top:.3rem;flex-wrap:wrap;">
+              <span style="background:rgba(74,222,128,.15);color:#4ade80;border-radius:6px;padding:.1rem .55rem;font-size:.72rem;font-weight:600;">Activo</span>
+              <span style="background:${u.rol==='ADMIN'?'rgba(251,191,36,.15)':'rgba(148,163,184,.15)'};color:${u.rol==='ADMIN'?'#fbbf24':'#94a3b8'};border-radius:6px;padding:.1rem .55rem;font-size:.72rem;font-weight:600;">${u.rol==='ADMIN'?'⭐ Admin':'Usuario'}</span>
+            </div>
           </div>
         </div>
         <button onclick="cerrarPanelPerfil()"
@@ -257,9 +303,14 @@ function actualizarLocks() {
 const pageTitles = {
   dashboard:'Dashboard', autos:'Autos registrados', registro:'Registrar auto',
   revision:'Revisión técnica', mecanica:'Revisión mecánica', valuacion:'Valuación / Precio',
+  analitica:'Analítica PowerBI',
 };
 
 function showView(id) {
+  if (PASO_SOLO_ADMIN.includes(id) && !esAdmin()) {
+    mostrarToast('⚠ Solo los administradores pueden acceder a esta sección', 'warn');
+    return;
+  }
   const paso = PASO_VISTA[id] || 1;
   if (paso > App.maxPaso) { mostrarToast('⚠ Completa el paso anterior primero', 'warn'); return; }
 
@@ -404,10 +455,12 @@ function renderizarTablaAutosVista() {
       <td style="white-space:nowrap;">
         <button class="btn-ghost" style="padding:.25rem .6rem;font-size:.75rem;margin-right:3px;"
                 onclick="verDetalleAuto('${a.id}')" title="Ver"><i class="bi bi-eye-fill"></i></button>
+        ${esAdmin() ? `
         <button class="btn-ghost" style="padding:.25rem .6rem;font-size:.75rem;margin-right:3px;"
                 onclick="abrirModalEstado('${a.id}')" title="Estado"><i class="bi bi-pencil-fill"></i></button>
         <button class="btn-ghost" style="padding:.25rem .6rem;font-size:.75rem;color:#f87171;"
                 onclick="confirmarArchivarAuto('${a.id}')" title="Archivar"><i class="bi bi-archive-fill"></i></button>
+        ` : ''}
       </td>
     </tr>`;
   }).join('');
@@ -532,6 +585,8 @@ async function verDetalleAuto(id) {
           ${obsMec ? `<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:.65rem .85rem;font-size:.82rem;color:var(--text-secondary);"><strong style="color:var(--text-primary);">Mecánica:</strong> ${obsMec}</div>` : ''}
         ` : ''}
         <div style="display:flex;gap:.5rem;margin-top:1.3rem;flex-wrap:wrap;">
+          ${esAdmin() ? `
+          ${esAdmin() ? `
           <button onclick="confirmarArchivarAuto('${a.id}');document.getElementById('modalDetalle').style.display='none'"
                   style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);color:#f87171;
                          border-radius:9px;padding:.6rem 1rem;cursor:pointer;font-size:.85rem;
@@ -543,7 +598,8 @@ async function verDetalleAuto(id) {
                          color:var(--text-primary);border-radius:9px;padding:.6rem 1rem;cursor:pointer;font-size:.85rem;
                          display:flex;align-items:center;justify-content:center;gap:.4rem;">
             <i class="bi bi-pencil-fill"></i> Cambiar estado
-          </button>
+          </button>` : ''}
+          ` : ''}
           <button onclick="document.getElementById('modalDetalle').style.display='none'"
                   style="flex:1;background:var(--bg-input);border:1px solid var(--border-strong);
                          color:var(--text-secondary);border-radius:9px;padding:.6rem 1rem;cursor:pointer;font-size:.85rem;">

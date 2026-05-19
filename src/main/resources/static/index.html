@@ -138,6 +138,10 @@
         <span class="sb-link-text">Valuación / Precio</span>
         <i class="bi bi-lock-fill sb-lock"></i>
       </a>
+      <a class="sb-link" data-view="analitica" onclick="showView('analitica')">
+        <i class="bi bi-bar-chart-fill"></i>
+        <span class="sb-link-text">Analítica PowerBI</span>
+      </a>
     </div>
 
     <div class="sb-footer" onclick="logout()">
@@ -1020,10 +1024,71 @@
   </div>
 </div>
 
+    <div class="view" id="view-analitica">
+      <div class="card-dark" style="margin-bottom:1rem;">
+        <div class="cd-header">
+          <span>
+            <i class="bi bi-bar-chart-fill me-2" style="color:var(--accent);"></i>
+            Analítica PowerBI
+          </span>
+        </div>
+        <div class="cd-body" style="padding:1.5rem;">
+
+          <!-- Tarjetas de métricas rápidas -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;">
+            <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;">
+              <div style="font-size:1.8rem;font-weight:800;color:#4ade80;">882</div>
+              <div style="font-size:.78rem;color:var(--text-secondary);margin-top:.2rem;">Autos Disponibles</div>
+            </div>
+            <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;">
+              <div style="font-size:1.8rem;font-weight:800;color:#fbbf24;">248</div>
+              <div style="font-size:.78rem;color:var(--text-secondary);margin-top:.2rem;">En Revisión</div>
+            </div>
+            <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;">
+              <div style="font-size:1.8rem;font-weight:800;color:#60a5fa;">476</div>
+              <div style="font-size:.78rem;color:var(--text-secondary);margin-top:.2rem;">Autos Vendidos</div>
+            </div>
+            <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;">
+              <div style="font-size:1.8rem;font-weight:800;color:var(--accent);">2.000</div>
+              <div style="font-size:.78rem;color:var(--text-secondary);margin-top:.2rem;">Autos Totales</div>
+            </div>
+            <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;">
+              <div style="font-size:1.8rem;font-weight:800;color:#a78bfa;">1.000</div>
+              <div style="font-size:.78rem;color:var(--text-secondary);margin-top:.2rem;">Propietarios</div>
+            </div>
+            <div style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-align:center;">
+              <div style="font-size:1.5rem;font-weight:800;color:#f472b6;">$51 mil M</div>
+              <div style="font-size:.78rem;color:var(--text-secondary);margin-top:.2rem;">Valor Inventario</div>
+            </div>
+          </div>
+
+          <!-- Botón para abrir Power BI -->
+          <div style="background:linear-gradient(135deg,rgba(36,99,235,.15),rgba(124,58,237,.15));
+                      border:1px solid rgba(36,99,235,.3);border-radius:14px;
+                      padding:2rem;text-align:center;">
+            <i class="bi bi-bar-chart-fill" style="font-size:2.5rem;color:#2563eb;display:block;margin-bottom:.75rem;"></i>
+            <div style="font-weight:700;font-size:1.05rem;margin-bottom:.4rem;">Dashboard Completo en Power BI</div>
+            <div style="color:var(--text-secondary);font-size:.85rem;margin-bottom:1.2rem;">
+              Visualización interactiva con gráficos de autos por ciudad, marca, transmisión, año y mapa de Colombia.
+            </div>
+            <a href="https://app.powerbi.com/view?r=eyJrIjoiMGYxNTlmYjEtOGJkNC00OGI5LWE1OTAtNzYyNGU4NmVjNmE5IiwidCI6IjlkMTJiZjNmLWU0ZjYtNDdhYi05MTJmLTFhMmYwZmM0OGFhNCIsImMiOjR9"
+               target="_blank"
+               style="display:inline-flex;align-items:center;gap:.5rem;background:#2563eb;
+                      color:#fff;border-radius:9px;padding:.75rem 1.5rem;text-decoration:none;
+                      font-weight:600;font-size:.9rem;transition:opacity .15s;">
+              <i class="bi bi-box-arrow-up-right"></i>
+              Abrir dashboard en Power BI
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
 <div class="toast-msg" id="appToast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/app.js"></script>
+<script src="js/app.js?v=2"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {

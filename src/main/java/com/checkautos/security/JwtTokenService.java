@@ -17,29 +17,33 @@ public class JwtTokenService {
     @Value("${jwt.expiration.ms}")
     private long jwtExpirationMs;
 
-
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-
-    public String generateToken(String username) {
-        Date now = new Date();
+    // Genera token con el rol incluido como claim
+    public String generateToken(String username, String rol) {
+        Date now    = new Date();
         Date expiry = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
                 .setSubject(username)
+                .claim("rol", rol)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-
     public String extractUsername(String token) {
         return parseClaims(token).getSubject();
     }
 
+    // Extrae el rol del token
+    public String extractRol(String token) {
+        Object rol = parseClaims(token).get("rol");
+        return rol != null ? rol.toString() : "USUARIO";
+    }
 
     public boolean validateToken(String token) {
         try {
@@ -49,7 +53,6 @@ public class JwtTokenService {
             return false;
         }
     }
-
 
     public Date getExpirationDate(String token) {
         return parseClaims(token).getExpiration();
