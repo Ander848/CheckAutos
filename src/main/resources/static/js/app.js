@@ -107,7 +107,7 @@ function initGoogleSignIn() {
 
 async function handleGoogleCredential(response) {
   try {
-    showAuthMsg('Verificando con Google…', 'info');
+    mostrarMsgAuth('Verificando con Google…', '');
     const res = await fetch('/api/auth/google', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -115,21 +115,20 @@ async function handleGoogleCredential(response) {
     });
     const data = await res.json();
     if (!res.ok) {
-      showAuthMsg(data.error || 'Error al iniciar con Google', 'error');
+      mostrarMsgAuth(data.error || 'Error al iniciar con Google', 'error');
       return;
     }
     App._token = data.token;
     localStorage.setItem('ca_token', data.token);
-    App.user   = data.usuario;
-    showAuthMsg('', '');
-    onLoginSuccess();
+    mostrarMsgAuth('', '');
+    iniciarSesion(data.usuario.nombre, data.usuario.email, data.usuario.rol);
   } catch (e) {
-    showAuthMsg('Error de red al iniciar con Google', 'error');
+    mostrarMsgAuth('Error de red al iniciar con Google', 'error');
   }
 }
 
 // Llamar initGoogleSignIn cuando el SDK esté listo
-window.onload = () => { if (window.google) initGoogleSignIn(); };
+window.addEventListener('load', () => { if (window.google) initGoogleSignIn(); });
 // El SDK llama a onGoogleLibraryLoad cuando termina de cargar
 window.onGoogleLibraryLoad = initGoogleSignIn;
 
