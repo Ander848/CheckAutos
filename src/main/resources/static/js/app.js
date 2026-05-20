@@ -58,6 +58,81 @@ function switchTab(tab) {
   msg.style.display = 'none';
 }
 
+// ══════════════════════════════════════════════════════════
+// Google OAuth2 — se inicializa cuando el SDK de GSI carga
+// ══════════════════════════════════════════════════════════
+
+// GOOGLE_CLIENT_ID se inyecta desde el servidor o se configura aquí
+// Puedes poner tu Client ID directamente como fallback mientras configuras la variable de entorno
+// Cargar el Client ID desde el servidor al arrancar
+let GOOGLE_CLIENT_ID = window.GOOGLE_CLIENT_ID || '';
+(async () => {
+  try {
+    const r = await fetch('/api/config/public');
+    if (r.ok) {
+      const cfg = await r.json();
+      if (cfg.googleClientId) {
+        GOOGLE_CLIENT_ID = cfg.googleClientId;
+        // Re-inicializar si el SDK ya cargó
+        if (window.google) initGoogleSignIn();
+      }
+    }
+  } catch(_) {}
+})();
+
+function initGoogleSignIn() {
+  if (!GOOGLE_CLIENT_ID || !window.google) return;
+
+  const renderBtn = (containerId) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    google.accounts.id.renderButton(container, {
+      theme:     'outline',
+      size:      'large',
+      text:      containerId === 'google-signin-btn' ? 'signin_with' : 'signup_with',
+      shape:     'rectangular',
+      logo_alignment: 'left',
+      width:     280
+    });
+  };
+
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback:  handleGoogleCredential
+  });
+
+  renderBtn('google-signin-btn');
+  renderBtn('google-signup-btn');
+}
+
+async function handleGoogleCredential(response) {
+  try {
+    showAuthMsg('Verificando con Google…', 'info');
+    const res = await fetch('/api/auth/google', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ credential: response.credential })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showAuthMsg(data.error || 'Error al iniciar con Google', 'error');
+      return;
+    }
+    App._token = data.token;
+    localStorage.setItem('ca_token', data.token);
+    App.user   = data.usuario;
+    showAuthMsg('', '');
+    onLoginSuccess();
+  } catch (e) {
+    showAuthMsg('Error de red al iniciar con Google', 'error');
+  }
+}
+
+// Llamar initGoogleSignIn cuando el SDK esté listo
+window.onload = () => { if (window.google) initGoogleSignIn(); };
+// El SDK llama a onGoogleLibraryLoad cuando termina de cargar
+window.onGoogleLibraryLoad = initGoogleSignIn;
+
 async function login() {
   const email = document.getElementById('loginUser').value.trim().toLowerCase();
   const pass  = document.getElementById('loginPass').value.trim();
@@ -402,9 +477,12 @@ async function cargarVistaAutos() {
 }
 
 function filtrarAutos() {
-  const txt    = (document.getElementById('filtroTexto')?.value  || '').trim().toLowerCase();
-  const estado = document.getElementById('filtroEstado')?.value  || 'Todos';
-  const año    = document.getElementById('filtroAnio')?.value    || 'Todos';
+  const txt       = (document.getElementById('filtroTexto')?.value    || '').trim().toLowerCase();
+  const estado    = document.getElementById('filtroEstado')?.value    || 'Todos';
+  const año       = document.getElementById('filtroAnio')?.value      || 'Todos';
+  const precioMin = parseInt(document.getElementById('filtroPrecioMin')?.value) || 0;
+  const precioMax = parseInt(document.getElementById('filtroPrecioMax')?.value) || Infinity;
+  const orden     = document.getElementById('filtroOrden')?.value     || '';
 
   autosFiltrados = App.autos.filter(a => {
     const t = !txt ||
@@ -413,8 +491,18 @@ function filtrarAutos() {
       (a.placa  && a.placa.toLowerCase().includes(txt));
     const e = estado === 'Todos' || a.estado === estado;
     const y = año    === 'Todos' || String(a.año) === año;
-    return t && e && y;
+    const p = (!precioMin || (a.precio >= precioMin)) && (!precioMax || precioMax === Infinity || (a.precio <= precioMax));
+    return t && e && y && p;
   });
+
+  // Aplicar ordenamiento
+  if (orden === 'precio_asc')  autosFiltrados.sort((a,b) => (a.precio||0) - (b.precio||0));
+  if (orden === 'precio_desc') autosFiltrados.sort((a,b) => (b.precio||0) - (a.precio||0));
+  if (orden === 'año_asc')     autosFiltrados.sort((a,b) => parseInt(a.año||0) - parseInt(b.año||0));
+  if (orden === 'año_desc')    autosFiltrados.sort((a,b) => parseInt(b.año||0) - parseInt(a.año||0));
+  if (orden === 'km_asc')      autosFiltrados.sort((a,b) => parseInt(a.kilometraje||0) - parseInt(b.kilometraje||0));
+  if (orden === 'km_desc')     autosFiltrados.sort((a,b) => parseInt(b.kilometraje||0) - parseInt(a.kilometraje||0));
+
   paginaActual = 1;
   renderizarTablaAutosVista();
 }
@@ -471,21 +559,61 @@ function renderizarTablaAutosVista() {
 function renderizarPaginacion(totalPag) {
   const nav = document.getElementById('paginacionAutos');
   if (!nav) return;
-  let html = `<li class="page-item ${paginaActual===1?'disabled':''}">
-    <a class="page-link" style="background:var(--bg-input);border-color:var(--border-strong);
-       color:${paginaActual===1?'var(--text-dim)':'var(--text-primary)'};cursor:pointer;"
-       onclick="cambiarPagina(${paginaActual-1})">‹</a></li>`;
-  for (let i = 1; i <= totalPag; i++) {
-    html += `<li class="page-item ${i===paginaActual?'active':''}">
-      <a class="page-link" style="background:${i===paginaActual?'var(--accent)':'var(--bg-input)'};
-         border-color:${i===paginaActual?'var(--accent)':'var(--border-strong)'};
-         color:${i===paginaActual?'#fff':'var(--text-primary)'};cursor:pointer;"
-         onclick="cambiarPagina(${i})">${i}</a></li>`;
+
+  // Paginación elegante: mostrar máximo 5 páginas visibles
+  const MAX_VISIBLE = 5;
+  let inicio = Math.max(1, paginaActual - Math.floor(MAX_VISIBLE / 2));
+  let fin    = Math.min(totalPag, inicio + MAX_VISIBLE - 1);
+  if (fin - inicio < MAX_VISIBLE - 1) inicio = Math.max(1, fin - MAX_VISIBLE + 1);
+
+  const btnStyle = (activo, disabled) => `
+    background:${activo?'var(--accent)':'var(--bg-input)'};
+    border:1px solid ${activo?'var(--accent)':'var(--border-strong)'};
+    color:${disabled?'var(--text-dim)':activo?'#fff':'var(--text-primary)'};
+    border-radius:8px;padding:.3rem .65rem;font-size:.82rem;cursor:${disabled?'default':'pointer'};
+    margin:0 2px;min-width:34px;text-align:center;display:inline-block;
+    pointer-events:${disabled?'none':'auto'};transition:background .15s;`;
+
+  let html = '';
+
+  // Botón primera página
+  html += `<li class="page-item ${paginaActual===1?'disabled':''}">
+    <a style="${btnStyle(false, paginaActual===1)}" onclick="cambiarPagina(1)">«</a></li>`;
+
+  // Botón anterior
+  html += `<li class="page-item ${paginaActual===1?'disabled':''}">
+    <a style="${btnStyle(false, paginaActual===1)}" onclick="cambiarPagina(${paginaActual-1})">‹</a></li>`;
+
+  // Puntos suspensivos al inicio
+  if (inicio > 1) {
+    html += `<li class="page-item disabled"><a style="${btnStyle(false,true)}">…</a></li>`;
   }
+
+  // Páginas visibles
+  for (let i = inicio; i <= fin; i++) {
+    html += `<li class="page-item ${i===paginaActual?'active':''}">
+      <a style="${btnStyle(i===paginaActual, false)}" onclick="cambiarPagina(${i})">${i}</a></li>`;
+  }
+
+  // Puntos suspensivos al final
+  if (fin < totalPag) {
+    html += `<li class="page-item disabled"><a style="${btnStyle(false,true)}">…</a></li>`;
+  }
+
+  // Botón siguiente
   html += `<li class="page-item ${paginaActual===totalPag?'disabled':''}">
-    <a class="page-link" style="background:var(--bg-input);border-color:var(--border-strong);
-       color:${paginaActual===totalPag?'var(--text-dim)':'var(--text-primary)'};cursor:pointer;"
-       onclick="cambiarPagina(${paginaActual+1})">›</a></li>`;
+    <a style="${btnStyle(false, paginaActual===totalPag)}" onclick="cambiarPagina(${paginaActual+1})">›</a></li>`;
+
+  // Botón última página
+  html += `<li class="page-item ${paginaActual===totalPag?'disabled':''}">
+    <a style="${btnStyle(false, paginaActual===totalPag)}" onclick="cambiarPagina(${totalPag})">»</a></li>`;
+
+  // Indicador de página actual
+  html += `<li class="page-item" style="margin-left:.5rem;">
+    <span style="color:var(--text-secondary);font-size:.78rem;line-height:2.2;">
+      Pág. ${paginaActual} de ${totalPag}
+    </span></li>`;
+
   nav.innerHTML = html;
 }
 
@@ -1314,6 +1442,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const selects = document.querySelectorAll('#view-autos select');
   if (selects[0]) { selects[0].id = 'filtroEstado'; selects[0].addEventListener('change', filtrarAutos); }
   if (selects[1]) { selects[1].id = 'filtroAnio';   selects[1].addEventListener('change', filtrarAutos); }
+  const precioMinEl = document.getElementById('filtroPrecioMin');
+  const precioMaxEl = document.getElementById('filtroPrecioMax');
+  const ordenEl     = document.getElementById('filtroOrden');
+  if (precioMinEl) precioMinEl.addEventListener('change', filtrarAutos);
+  if (precioMaxEl) precioMaxEl.addEventListener('change', filtrarAutos);
+  if (ordenEl)     ordenEl.addEventListener('change', filtrarAutos);
   const btnFiltrar = document.querySelector('#view-autos .cd-body .btn-ghost');
   if (btnFiltrar) btnFiltrar.onclick = filtrarAutos;
   const paginacionUl = document.querySelector('#view-autos .pagination');

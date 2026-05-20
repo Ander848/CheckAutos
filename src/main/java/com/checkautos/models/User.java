@@ -22,6 +22,10 @@ public class User {
     private String initials;
     private String rol;
 
+    // OAuth2
+    private String googleId;   // sub del token de Google
+    private String provider;   // "local" | "google"
+
     public User() {}
 
     public User(String nombre, String email, String password) {
@@ -64,6 +68,12 @@ public class User {
     public void   setRol(String rol)         { this.rol = rol; }
 
     public boolean isAdmin()                 { return "ADMIN".equals(this.rol); }
+
+    public String getGoogleId()              { return googleId; }
+    public void   setGoogleId(String g)      { this.googleId = g; }
+
+    public String getProvider()              { return provider != null ? provider : "local"; }
+    public void   setProvider(String p)      { this.provider = p; }
 
     @Override
     public String toString() {

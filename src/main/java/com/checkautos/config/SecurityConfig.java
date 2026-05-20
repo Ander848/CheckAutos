@@ -31,7 +31,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 
                 // ── Públicas (sin token) ──────────────────────────────
-                .requestMatchers("/api/auth/login", "/api/auth/registro").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/registro", "/api/auth/google").permitAll()
+                .requestMatchers("/api/config/public").permitAll()
                 .requestMatchers("/", "/index.html", "/css/**", "/js/**",
                                  "/favicon.ico", "/*.html", "/*.js", "/*.css").permitAll()
 

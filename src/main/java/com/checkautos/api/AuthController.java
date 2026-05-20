@@ -7,6 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import org.springframework.beans.factory.annotation.Value;
+
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -19,9 +26,86 @@ public class AuthController {
     private final AppContext      appContext;
     private final JwtTokenService jwtTokenService;
 
+    @Value("${google.client-id}")
+    private String googleClientId;
+
     public AuthController(AppContext appContext, JwtTokenService jwtTokenService) {
         this.appContext      = appContext;
         this.jwtTokenService = jwtTokenService;
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
+        String credential = body.get("credential");
+        if (credential == null || credential.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Token de Google requerido"));
+        }
+        if (googleClientId == null || googleClientId.isBlank()) {
+            return ResponseEntity.status(500).body(Map.of("error", "Google OAuth no configurado en el servidor"));
+        }
+
+        GoogleIdToken idToken;
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(), GsonFactory.getDefaultInstance())
+                    .setAudience(Collections.singletonList(googleClientId))
+                    .build();
+            idToken = verifier.verify(credential);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Token de Google inválido"));
+        }
+
+        if (idToken == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "No se pudo verificar el token de Google"));
+        }
+
+        GoogleIdToken.Payload payload = idToken.getPayload();
+        String googleId = payload.getSubject();
+        String email    = payload.getEmail().toLowerCase();
+        String nombre   = (String) payload.get("name");
+        if (nombre == null || nombre.isBlank()) nombre = email.split("@")[0];
+
+        // Buscar usuario por email o crearlo
+        User user = appContext.getAuthManager().getAllAccounts().stream()
+                .filter(u -> email.equals(u.getEmail()))
+                .findFirst().orElse(null);
+
+        if (user == null) {
+            // Crear cuenta nueva sin password (solo Google)
+            user = new User(nombre, email, null, "USUARIO");
+            user.setGoogleId(googleId);
+            user.setProvider("google");
+            appContext.getAuthManager().guardarUsuario(user);
+            // Recargar para obtener el ID de Mongo
+            user = appContext.getAuthManager().getAllAccounts().stream()
+                    .filter(u -> email.equals(u.getEmail()))
+                    .findFirst().orElse(user);
+        } else {
+            // Actualizar googleId si es la primera vez que usa Google
+            if (user.getGoogleId() == null) {
+                user.setGoogleId(googleId);
+                if ("local".equals(user.getProvider()) || user.getProvider() == null) {
+                    // mantener proveedor local si ya tenía contraseña
+                }
+                appContext.getAuthManager().guardarUsuario(user);
+            }
+        }
+
+        String token = jwtTokenService.generateToken(email, user.getRol());
+        Date expira  = jwtTokenService.getExpirationDate(token);
+
+        return ResponseEntity.ok(Map.of(
+                "token",   token,
+                "tipo",    "Bearer",
+                "expira",  expira.toString(),
+                "usuario", Map.of(
+                        "nombre",    user.getNombre(),
+                        "email",     user.getEmail(),
+                        "username",  user.getEmail(),
+                        "iniciales", user.getInitials(),
+                        "rol",       user.getRol()
+                )
+        ));
     }
 
     @PostMapping("/login")
